@@ -29,8 +29,18 @@ plugins {
             }
 
             buildTypes {
+
                 release {
+                    // ... existing signingConfig ...
                     signingConfig = signingConfigs.getByName("debug")
+
+                    // Add these lines:
+                    isMinifyEnabled = true // Enables R8
+                    isShrinkResources = false // Set to false if you suspect resource stripping
+                    proguardFiles(
+                        getDefaultProguardFile("proguard-android-optimize.txt"),
+                        "proguard-rules.pro"
+                    )
                 }
             }
 
@@ -48,6 +58,8 @@ plugins {
         dependencies {
             // eseeiot SDK
             implementation(files("libs/esee_main_release_v1.0.0.aar"))
+
+            implementation("com.google.zxing:core:3.5.3")
 
             // Required dependencies
             implementation("com.google.code.gson:gson:2.11.0")
