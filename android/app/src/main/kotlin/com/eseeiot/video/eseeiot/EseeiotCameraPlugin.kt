@@ -47,6 +47,23 @@ class EseeiotCameraPlugin :  FlutterPlugin, MethodCallHandler, ActivityAware,
     private var context: Context? = null
     private var activity: Activity? = null
 
+    fun getDisplayView(): JAGLSurfaceView? = mDisplayView
+
+    /**
+     * Get the current device
+     */
+    fun getDevice(): MonitorDevice? = mDevice
+
+    /**
+     * Get the current player
+     */
+    fun getPlayer(): JALivePlayer? = mPlayer
+
+    /**
+     * Get the render pipe
+     */
+    fun getRenderPipe(): RenderPipe? = mRenderPipe
+
     // Camera components - matching LiveViewViewModel structure
     private var mDevice: MonitorDevice?  = null
     private var mCamera: com.eseeiot. basemodule.device. base.MonitorCamera? = null

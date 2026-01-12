@@ -2,6 +2,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import '../services/eseeiot_camera_service.dart';
+import '../widgets/eseeiot_camera_view.dart';
 
 class LiveViewScreen extends StatefulWidget {
   final String deviceId;
@@ -11,8 +12,8 @@ class LiveViewScreen extends StatefulWidget {
 
   const LiveViewScreen({
     super.key,
-    required this.deviceId,
-    this. deviceName,
+    required this. deviceId,
+    this.deviceName,
     this.username = 'admin',
     this.password = '',
   });
@@ -26,9 +27,10 @@ class _LiveViewScreenState extends State<LiveViewScreen> {
   bool _isConnected = false;
   bool _showControls = true;
   bool _isLandscape = false;
-  String? _errorMessage;
+  bool _isViewReady = false;
+  String?  _errorMessage;
   Timer? _hideControlsTimer;
-  StreamSubscription?  _eventSubscription;
+  StreamSubscription? _eventSubscription;
 
   @override
   void initState() {
@@ -46,10 +48,10 @@ class _LiveViewScreenState extends State<LiveViewScreen> {
     try {
       // First, save the camera with credentials (in case it wasn't saved before)
       final saveResult = await EseeiotCameraService.saveCamera(
-        cameraId: widget. deviceId,
-        cameraName: widget.deviceName ?? widget.deviceId,
+        cameraId: widget.deviceId,
+        cameraName: widget.deviceName ??  widget.deviceId,
         username: widget. username,
-        password: widget.password,
+        password: widget. password,
       );
 
       if (! saveResult) {
@@ -71,7 +73,7 @@ class _LiveViewScreenState extends State<LiveViewScreen> {
       }
 
       // Initialize live view
-      final initResult = await EseeiotCameraService.initLiveView();
+      final initResult = await EseeiotCameraService. initLiveView();
       if (!initResult) {
         setState(() {
           _errorMessage = 'Failed to initialize live view';
@@ -81,7 +83,7 @@ class _LiveViewScreenState extends State<LiveViewScreen> {
       }
 
       // Start playback
-      final startResult = await EseeiotCameraService. startPlay();
+      final startResult = await EseeiotCameraService.startPlay();
       if (!startResult) {
         setState(() {
           _errorMessage = 'Failed to start playback';
@@ -105,7 +107,7 @@ class _LiveViewScreenState extends State<LiveViewScreen> {
   }
 
   void _listenToEvents() {
-    _eventSubscription = EseeiotCameraService.eventStream. listen((event) {
+    _eventSubscription = EseeiotCameraService.eventStream.listen((event) {
       final type = event['type'] as String? ;
       final data = event['data'] as Map<String, dynamic>?;
 
@@ -123,7 +125,10 @@ class _LiveViewScreenState extends State<LiveViewScreen> {
           });
           break;
         case 'surfaceReady':
-          print('Surface ready:  ${data? ['width']}x${data?['height']}');
+          print('Surface ready:  ${data?['width']}x${data?['height']}');
+          setState(() {
+            _isViewReady = true;
+          });
           break;
         case 'liveViewInitialized':
           print('Live view initialized');
@@ -149,11 +154,11 @@ class _LiveViewScreenState extends State<LiveViewScreen> {
   }
 
   void _toggleOrientation() {
-    setState(() => _isLandscape = ! _isLandscape);
+    setState(() => _isLandscape = !_isLandscape);
     if (_isLandscape) {
       SystemChrome.setPreferredOrientations([
         DeviceOrientation.landscapeLeft,
-        DeviceOrientation.landscapeRight,
+        DeviceOrientation. landscapeRight,
       ]);
       SystemChrome.setEnabledSystemUIMode(SystemUiMode.immersiveSticky);
     } else {
@@ -168,8 +173,8 @@ class _LiveViewScreenState extends State<LiveViewScreen> {
     _eventSubscription?.cancel();
     EseeiotCameraService.stopPlay();
     EseeiotCameraService.dispose();
-    SystemChrome.setPreferredOrientations([DeviceOrientation.portraitUp]);
-    SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge);
+    SystemChrome.setPreferredOrientations([DeviceOrientation. portraitUp]);
+    SystemChrome.setEnabledSystemUIMode(SystemUiMode. edgeToEdge);
     super.dispose();
   }
 
@@ -177,7 +182,7 @@ class _LiveViewScreenState extends State<LiveViewScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.black,
-      body:  SafeArea(child: _buildBody()),
+      body: SafeArea(child: _buildBody()),
     );
   }
 
@@ -188,9 +193,9 @@ class _LiveViewScreenState extends State<LiveViewScreen> {
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             CircularProgressIndicator(color: Colors.white),
-            SizedBox(height:  16),
+            SizedBox(height: 16),
             Text(
-              'Connecting to camera...',
+              'Connecting to camera.. .',
               style: TextStyle(color: Colors.white),
             ),
           ],
@@ -203,20 +208,20 @@ class _LiveViewScreenState extends State<LiveViewScreen> {
         child:  Padding(
           padding: const EdgeInsets.all(24.0),
           child: Column(
-            mainAxisAlignment:  MainAxisAlignment.center,
-            children:  [
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
               const Icon(Icons.error_outline, color: Colors.red, size: 64),
               const SizedBox(height: 16),
               Text(
                 _errorMessage!,
                 style: const TextStyle(color: Colors.white),
-                textAlign: TextAlign.center,
+                textAlign: TextAlign. center,
               ),
-              const SizedBox(height:  24),
+              const SizedBox(height: 24),
               ElevatedButton. icon(
                 onPressed: _initializeCamera,
                 icon: const Icon(Icons.refresh),
-                label:  const Text('Try Again'),
+                label: const Text('Try Again'),
               ),
               const SizedBox(height: 16),
               TextButton(
@@ -231,133 +236,142 @@ class _LiveViewScreenState extends State<LiveViewScreen> {
 
     return GestureDetector(
       onTap: _toggleControls,
-      child:  Stack(
-        children:  [
-      // Camera View Placeholder
-      // TODO: Replace with actual native view when PlatformView is set up
-      Center(
-      child:  Container(
-      color: Colors.black,
-        child: AspectRatio(
-          aspectRatio:  16 / 9,
-          child: _isConnected
-              ?  Container(
-            color: Colors.grey[900],
-            child: const Center(
-              child: Column(
-                mainAxisAlignment:  MainAxisAlignment.center,
-                children: [
-                  Icon(
-                    Icons.videocam,
-                    color: Colors.white54,
-                    size: 64,
-                  ),
-                  SizedBox(height: 16),
-                  Text(
-                    'Camera Connected',
-                    style: TextStyle(color: Colors.white54),
-                  ),
-                  SizedBox(height:  8),
-                  Text(
-                    'Video view requires PlatformView setup',
-                    style: TextStyle(color: Colors.white38, fontSize: 12),
-                  ),
-                ],
+      child: Stack(
+        children: [
+          // Native Camera View - This is the actual video stream!
+          Center(
+            child: Container(
+              color: Colors.black,
+              child: AspectRatio(
+                aspectRatio: 16 / 9,
+                child: _isConnected
+                    ? EseeiotCameraView(
+                  deviceId: widget.deviceId,
+                  autoPlay: false, // We already started playback via service
+                  onViewReady: (width, height, channelCount) {
+                    print('Camera view ready:  ${width}x$height, channels: $channelCount');
+                    setState(() {
+                      _isViewReady = true;
+                    });
+                  },
+                  onError: (error) {
+                    print('Camera view error: $error');
+                    setState(() {
+                      _errorMessage = error;
+                    });
+                  },
+                )
+                    : const Center(
+                  child: CircularProgressIndicator(color: Colors.white),
+                ),
               ),
             ),
-          )
-              : const Center(
-            child: CircularProgressIndicator(color: Colors.white),
           ),
-        ),
+
+          // Loading overlay while view initializes
+          if (_isConnected && ! _isViewReady)
+            Center(
+              child: Container(
+                color: Colors.black54,
+                child: const Column(
+                  mainAxisAlignment:  MainAxisAlignment.center,
+                  children: [
+                    CircularProgressIndicator(color: Colors.white),
+                    SizedBox(height: 16),
+                    Text(
+                      'Loading video stream...',
+                      style: TextStyle(color: Colors.white),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+
+          // Controls overlay
+          if (_showControls) ...[
+            // Top bar
+            Positioned(
+              top:  0,
+              left: 0,
+              right: 0,
+              child: Container(
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    begin: Alignment.topCenter,
+                    end: Alignment.bottomCenter,
+                    colors: [Colors.black.withOpacity(0.7), Colors.transparent],
+                  ),
+                ),
+                child: Row(
+                  children: [
+                    IconButton(
+                      icon: const Icon(Icons.arrow_back, color: Colors.white),
+                      onPressed: () => Navigator.of(context).pop(),
+                    ),
+                    Expanded(
+                      child: Text(
+                        widget.deviceName ?? 'Camera',
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ),
+                    IconButton(
+                      icon: Icon(
+                        _isLandscape ? Icons.fullscreen_exit : Icons.fullscreen,
+                        color: Colors. white,
+                      ),
+                      onPressed: _toggleOrientation,
+                    ),
+                  ],
+                ),
+              ),
+            ),
+
+            // Bottom controls
+            Positioned(
+              bottom: 0,
+              left:  0,
+              right: 0,
+              child: Container(
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    begin: Alignment.bottomCenter,
+                    end:  Alignment.topCenter,
+                    colors: [Colors.black.withOpacity(0.7), Colors.transparent],
+                  ),
+                ),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                  children: [
+                    _buildControlButton(
+                      icon: Icons.camera_alt,
+                      label:  'Snapshot',
+                      onPressed: () async {
+                        await EseeiotCameraService. capture();
+                        if (mounted) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(content: Text('Snapshot captured')),
+                          );
+                        }
+                      },
+                    ),
+                    _buildControlButton(
+                      icon: Icons.control_camera,
+                      label: 'PTZ',
+                      onPressed:  () => _showPTZDialog(),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ],
+        ],
       ),
-    ),
-
-    // Controls overlay
-    if (_showControls) ...[
-    // Top bar
-    Positioned(
-    top: 0,
-    left: 0,
-    right: 0,
-    child:  Container(
-    padding: const EdgeInsets.all(16),
-    decoration: BoxDecoration(
-    gradient: LinearGradient(
-    begin: Alignment.topCenter,
-    end: Alignment.bottomCenter,
-    colors: [Colors.black. withOpacity(0.7), Colors.transparent],
-    ),
-    ),
-    child: Row(
-    children: [
-    IconButton(
-    icon: const Icon(Icons.arrow_back, color:  Colors.white),
-    onPressed:  () => Navigator.of(context).pop(),
-    ),
-    Expanded(
-    child: Text(
-    widget.deviceName ?? 'Camera',
-    style: const TextStyle(
-    color: Colors.white,
-    fontSize:  18,
-    fontWeight: FontWeight. bold,
-    ),
-    ),
-    ),
-    IconButton(
-    icon:  Icon(
-    _isLandscape ? Icons. fullscreen_exit : Icons.fullscreen,
-    color: Colors.white,
-    ),
-    onPressed: _toggleOrientation,
-    ),
-    ],
-    ),
-    ),
-    ),
-
-    // Bottom controls
-    Positioned(
-    bottom: 0,
-    left: 0,
-    right: 0,
-    child:  Container(
-    padding: const EdgeInsets.all(16),
-    decoration: BoxDecoration(
-    gradient: LinearGradient(
-    begin: Alignment.bottomCenter,
-    end: Alignment.topCenter,
-    colors: [Colors. black.withOpacity(0.7), Colors.transparent],
-    ),
-    ),
-    child:  Row(
-    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-    children: [
-    _buildControlButton(
-    icon: Icons.camera_alt,
-    label: 'Snapshot',
-    onPressed: () async {
-    await EseeiotCameraService.capture();
-    if (mounted) {
-    ScaffoldMessenger. of(context).showSnackBar(
-    const SnackBar(content: Text('Snapshot captured')),
-    );
-    }
-    },
-    ),
-    _buildControlButton(
-    icon: Icons.control_camera,
-    label: 'PTZ',
-    onPressed: () => _showPTZDialog(),
-    ),
-    ],
-    ),
-    ),
-    ),
-    ],
-    ],
-    ),
     );
   }
 
@@ -367,7 +381,7 @@ class _LiveViewScreenState extends State<LiveViewScreen> {
     required VoidCallback onPressed,
   }) {
     return Column(
-      mainAxisSize: MainAxisSize. min,
+      mainAxisSize: MainAxisSize.min,
       children: [
         IconButton(
           icon: Icon(icon, color: Colors.white, size: 32),
@@ -380,28 +394,28 @@ class _LiveViewScreenState extends State<LiveViewScreen> {
 
   void _showPTZDialog() {
     showModalBottomSheet(
-      context: context,
+      context:  context,
       backgroundColor: Colors.transparent,
       builder: (context) => Container(
-        padding:  const EdgeInsets. all(24),
+        padding: const EdgeInsets.all(24),
         decoration: const BoxDecoration(
-          color: Colors. black87,
+          color: Colors.black87,
           borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
         ),
         child: Column(
-          mainAxisSize: MainAxisSize. min,
+          mainAxisSize:  MainAxisSize.min,
           children: [
             const Text(
               'PTZ Control',
               style: TextStyle(
-                color:  Colors.white,
+                color: Colors.white,
                 fontSize: 18,
                 fontWeight: FontWeight.bold,
               ),
             ),
             const SizedBox(height: 24),
             _buildPTZControls(),
-            const SizedBox(height: 24),
+            const SizedBox(height:  24),
             TextButton(
               onPressed: () => Navigator.of(context).pop(),
               child: const Text('Close'),
@@ -414,27 +428,27 @@ class _LiveViewScreenState extends State<LiveViewScreen> {
 
   Widget _buildPTZControls() {
     return Column(
-      mainAxisSize:  MainAxisSize.min,
-      children:  [
+      mainAxisSize: MainAxisSize.min,
+      children: [
         // Up button
         _buildPTZButton(
-          icon: Icons. arrow_upward,
+          icon: Icons.arrow_upward,
           onPressed: EseeiotCameraService.ptzMoveUp,
-          onReleased: EseeiotCameraService. ptzStop,
+          onReleased: EseeiotCameraService.ptzStop,
         ),
         const SizedBox(height: 8),
         // Left, Center, Right
         Row(
-          mainAxisAlignment: MainAxisAlignment. center,
-          children:  [
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
             _buildPTZButton(
               icon: Icons.arrow_back,
               onPressed: EseeiotCameraService.ptzMoveLeft,
-              onReleased:  EseeiotCameraService.ptzStop,
+              onReleased: EseeiotCameraService.ptzStop,
             ),
             const SizedBox(width: 48),
             _buildPTZButton(
-              icon: Icons.arrow_forward,
+              icon: Icons. arrow_forward,
               onPressed: EseeiotCameraService.ptzMoveRight,
               onReleased: EseeiotCameraService.ptzStop,
             ),
@@ -443,8 +457,8 @@ class _LiveViewScreenState extends State<LiveViewScreen> {
         const SizedBox(height: 8),
         // Down button
         _buildPTZButton(
-          icon: Icons. arrow_downward,
-          onPressed:  EseeiotCameraService.ptzMoveDown,
+          icon: Icons.arrow_downward,
+          onPressed: EseeiotCameraService.ptzMoveDown,
           onReleased: EseeiotCameraService.ptzStop,
         ),
       ],
@@ -464,10 +478,10 @@ class _LiveViewScreenState extends State<LiveViewScreen> {
         width: 56,
         height:  56,
         decoration: BoxDecoration(
-          color:  Colors.white24,
+          color: Colors.white24,
           borderRadius: BorderRadius.circular(28),
         ),
-        child: Icon(icon, color:  Colors.white, size: 32),
+        child: Icon(icon, color: Colors.white, size: 32),
       ),
     );
   }
