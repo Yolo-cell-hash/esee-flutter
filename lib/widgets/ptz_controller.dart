@@ -7,106 +7,60 @@ class PTZController extends StatelessWidget {
   final Color buttonColor;
   final Color activeButtonColor;
   final Color iconColor;
-
   const PTZController({
-    super. key,
+    super.key,
     this.size = 200,
-    this. backgroundColor = Colors.black54,
-    this. buttonColor = Colors. white24,
-    this. activeButtonColor = Colors.blue,
-    this. iconColor = Colors. white,
+    this.backgroundColor = Colors.black54,
+    this.buttonColor = Colors.white24,
+    this.activeButtonColor = Colors.blue,
+    this.iconColor = Colors.white,
   });
 
   @override
   Widget build(BuildContext context) {
-    final buttonSize = size / 3;
-
-    return Container(
-      width:  size,
-      height:  size,
-      decoration: BoxDecoration(
-        color: backgroundColor,
-        shape: BoxShape.circle,
-      ),
-      child: Stack(
-        children:  [
-          // Up button
-          Positioned(
-            top:  10,
-            left: size / 2 - buttonSize / 2,
-            child:  _PTZButton(
-              icon: Icons.keyboard_arrow_up,
-              onPressed: EseeiotCameraService.ptzMoveUp,
-              onReleased: EseeiotCameraService.ptzStop,
-              size:  buttonSize,
-              buttonColor: buttonColor,
-              activeColor: activeButtonColor,
-              iconColor: iconColor,
-            ),
+    // Wrap in a FittedBox to ensure it never "falls out" of its allocated space
+    return SizedBox(
+      width: size,
+      height: size,
+      child: FittedBox(
+        child: Container(
+          width: 200, // Internal fixed coordinate system
+          height: 200,
+          decoration: BoxDecoration(color: backgroundColor, shape: BoxShape.circle),
+          child: Stack(
+            clipBehavior: Clip.none, // Prevent clipping if icons slightly overlap
+            children: [
+              _positionedButton(Alignment.topCenter, Icons.keyboard_arrow_up, EseeiotCameraService.ptzMoveUp),
+              _positionedButton(Alignment.bottomCenter, Icons.keyboard_arrow_down, EseeiotCameraService.ptzMoveDown),
+              _positionedButton(Alignment.centerLeft, Icons.keyboard_arrow_left, EseeiotCameraService.ptzMoveLeft),
+              _positionedButton(Alignment.centerRight, Icons.keyboard_arrow_right, EseeiotCameraService.ptzMoveRight),
+              const Center(child: Icon(Icons.control_camera, color: Colors.white24, size: 30)),
+            ],
           ),
-          // Down button
-          Positioned(
-            bottom: 10,
-            left: size / 2 - buttonSize / 2,
-            child: _PTZButton(
-              icon: Icons. keyboard_arrow_down,
-              onPressed: EseeiotCameraService.ptzMoveDown,
-              onReleased: EseeiotCameraService. ptzStop,
-              size: buttonSize,
-              buttonColor: buttonColor,
-              activeColor: activeButtonColor,
-              iconColor: iconColor,
-            ),
-          ),
-          // Left button
-          Positioned(
-            left: 10,
-            top: size / 2 - buttonSize / 2,
-            child:  _PTZButton(
-              icon: Icons.keyboard_arrow_left,
-              onPressed: EseeiotCameraService. ptzMoveLeft,
-              onReleased: EseeiotCameraService.ptzStop,
-              size: buttonSize,
-              buttonColor: buttonColor,
-              activeColor:  activeButtonColor,
-              iconColor: iconColor,
-            ),
-          ),
-          // Right button
-          Positioned(
-            right: 10,
-            top: size / 2 - buttonSize / 2,
-            child:  _PTZButton(
-              icon: Icons.keyboard_arrow_right,
-              onPressed: EseeiotCameraService. ptzMoveRight,
-              onReleased: EseeiotCameraService.ptzStop,
-              size: buttonSize,
-              buttonColor: buttonColor,
-              activeColor:  activeButtonColor,
-              iconColor: iconColor,
-            ),
-          ),
-          // Center indicator
-          Center(
-            child:  Container(
-              width:  buttonSize * 0.8,
-              height: buttonSize * 0.8,
-              decoration: BoxDecoration(
-                color: buttonColor,
-                shape: BoxShape.circle,
-                border: Border.all(color: iconColor, width: 2),
-              ),
-              child: Icon(
-                Icons.control_camera,
-                color:  iconColor. withOpacity(0.5),
-                size: buttonSize * 0.4,
-              ),
-            ),
-          ),
-        ],
+        ),
       ),
     );
   }
+
+  Widget _positionedButton(Alignment alignment, IconData icon, Future<bool> Function() action) {
+    return Align(
+      alignment: alignment,
+      child: Padding(
+        padding: const EdgeInsets.all(8.0),
+        child: _PTZButton(
+          icon: icon,
+          onPressed: action,
+          onReleased: EseeiotCameraService.ptzStop,
+          size: 50,
+          buttonColor: buttonColor,
+          activeColor: activeButtonColor,
+          iconColor: iconColor,
+        ),
+      ),
+    );
+  }
+
+// Note: Keep the existing _PTZButton class from your original file
 }
 
 class _PTZButton extends StatefulWidget {
