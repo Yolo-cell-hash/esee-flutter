@@ -54,8 +54,8 @@ class _HomeScreenState extends State<HomeScreen> {
       Navigator.of(context).pushReplacement(
         MaterialPageRoute(
           builder: (context) => const LiveViewScreen(
-            deviceId: '6659244802',
-            deviceName: 'Main Camera',
+            deviceId: '6659244802',   //6659244802
+            deviceName: 'The Store',
             username: 'admin',
             password: '', // Empty string as requested
           ),

@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import '../services/eseeiot_camera_service.dart';
 import '../widgets/eseeiot_camera_view.dart';
-import '../widgets/ptz_controller.dart'; // Import the PTZ Controller
+import '../widgets/ptz_controller.dart';
 
 class LiveViewScreen extends StatefulWidget {
   final String deviceId;
